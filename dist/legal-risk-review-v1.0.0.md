@@ -2,7 +2,7 @@
 
 > 本文件由仓库内 `skills/legal-risk-review/` 下各文件按顺序拼接生成，**内容与源文件逐字一致**。
 > 用途：整段粘贴给任何 AI，或放进产品知识库，无需安装目录结构。
-> 修改请改源文件后重新生成，不要单独编辑本文件（否则会与仓库分叉）。
+> 修改请改源文件后运行 `pwsh scripts/build-dist.ps1` 重新生成，不要单独编辑本文件。
 > 仓库：https://github.com/symbolccc/legal-risk-review
 
 ## 目录
@@ -20,7 +20,6 @@
 | 附录 H | 示例：供应商审批输出与 JSON | `examples/example-supplier-review.md` |
 
 ---
-
 
 ---
 name: legal-risk-review

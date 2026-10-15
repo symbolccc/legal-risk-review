@@ -17,9 +17,19 @@ legal-risk-review/
 ├── references/   按需加载的细则（R1–R9、五类审理、用印、证据契约）
 ├── assets/       可填模板与标准话术
 ├── examples/     脱敏示例（含 JSON 输出）
+├── dist/         单文件分享版（构建产物，整段粘贴用）
+├── scripts/      build-dist.ps1 重新生成 dist/
 ├── CHANGELOG.md
 └── LICENSE       MIT
 ```
+
+改完源文件后重建分享版：
+
+```bash
+pwsh scripts/build-dist.ps1
+```
+
+脚本会从 `SKILL.md` 的 `version:` 读取版本号决定输出文件名，并逐个校验源文件是否被逐字复现，任一不一致即退出非零。
 
 采用渐进式披露：`SKILL.md` 是主干，细则放 `references/`，避免一次性撑爆上下文。
 
