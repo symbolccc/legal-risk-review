@@ -1,0 +1,27 @@
+# Local and sensitive files — never commit these
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*
+secrets*
+tokens*
+
+# Real case material (client documents, licenses, bank proofs)
+cases/
+attachments/
+*.pdf
+*.xlsx
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Temp
+*.tmp
+*.log
+node_modules/

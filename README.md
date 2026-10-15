@@ -1,55 +1,96 @@
 # legal-risk-review
 
-广告 / 营销公司法务风控审核口径的 Agent Skill。把一套实际在用的审核规则变成 AI 可执行的指令，用于：
+广告 / 营销公司法务风控审核口径的 Agent Skill。把一套实际在用的审核规则变成 AI 可执行的指令：
 
 - 撰写客户垫款意见、风控意见
 - 审理返点与客户/媒体结算单
 - 供应商入库审批（营业执照、银行信息、一般纳税人、跨境口径）
 - 合同用印与原件归档流程
 
-## 文件
+**不构成法律意见。** 输出为初审口径与风险提示，须经有资质人员复核。
 
-| 文件 | 作用 |
-| :-- | :-- |
-| `SKILL.md` | 技能主体，含 frontmatter、审核口径与输出前自检清单 |
-| `LICENSE` | MIT |
+## 结构
+
+```
+legal-risk-review/
+├── SKILL 主体  skills/legal-risk-review/SKILL.md
+├── references/   按需加载的细则（R1–R9、五类审理、用印、证据契约）
+├── assets/       可填模板与标准话术
+├── examples/     脱敏示例（含 JSON 输出）
+├── CHANGELOG.md
+└── LICENSE       MIT
+```
+
+采用渐进式披露：`SKILL.md` 是主干，细则放 `references/`，避免一次性撑爆上下文。
 
 ## 安装
 
-### Claude Code
+### Claude Code / 支持 skills 目录的 Agent
 
 ```bash
-git clone https://github.com/symbolccc/legal-risk-review.git \
-  ~/.claude/skills/legal-risk-review
+git clone https://github.com/symbolccc/legal-risk-review.git /tmp/lrr
+cp -r /tmp/lrr/skills/legal-risk-review ~/.claude/skills/
 ```
 
-重启会话后，直接说「按 legal-risk-review 的口径给这家客户写垫款意见」即可触发。
+装好后直接说「按 legal-risk-review 的口径给这家客户写垫款意见」。
 
-### Codex / 其他支持 AGENTS.md 的 Agent
+### Skills CLI
 
-在仓库或工作目录的 `AGENTS.md` 里加一行引用：
+```bash
+npx skills add symbolccc/legal-risk-review@legal-risk-review
+```
+
+> 仓库刚发布，skills.sh 索引可能尚未收录。若报找不到，请用上面的 clone 方式。
+
+### Codex / 其他读 AGENTS.md 的 Agent
+
+在 `AGENTS.md` 加一行：
 
 ```markdown
-涉及法务风控、垫款意见、结算单审理、供应商入库审批时，先读 legal-risk-review/SKILL.md 并按其口径执行。
+涉及法务风控、垫款意见、结算单审理、供应商入库审批时，先读 skills/legal-risk-review/SKILL.md 并按其口径执行。
 ```
 
 ### 纯网页聊天产品
 
-把 `SKILL.md` 全文粘贴进对话开头，或加入产品的知识库 / 自定义指令。它不依赖任何工具调用。
+把 `SKILL.md` 全文粘进对话开头或产品知识库即可，它不依赖任何工具调用。
 
-## 使用要点
+## 换公司必须重新校准的 8 处
 
-- 这是一套**审核口径**，不是法律意见。输出仍需人工复核。
-- 规则里的比例、天数、部门归类都来自特定公司的内部制度，换公司必须重新校准。
-- `SKILL.md` 第 3.2 节列出的项目是**刻意留空**的：证据不足时，技能要求 AI 输出「需人工核验」，而不是猜一个结论。
+这套口径的规则骨架通用，**数值与归类不可照搬**。fork 后逐项检查：
 
-## 核心设计
+| # | 位置 | 要改什么 |
+| :-- | :-- | :-- |
+| 1 | `SKILL.md` §2.4 | 额度下浮比例（20% / 30%） |
+| 2 | `SKILL.md` §2.3 | GMV 时效规则（哪一年看哪一段） |
+| 3 | `SKILL.md` §2.2 | 电商固定档天数、穿透各段口径 |
+| 4 | `SKILL.md` §4 §5 | 分档阈值与升级触发的组织层级 |
+| 5 | `references/supplier-rules.md` | 部门归类名单、R1–R9 规则本身 |
+| 6 | `references/supplier-rules.md` | 六项「未确认」是否已在贵司确认 |
+| 7 | `references/source-contract.md` | 第三方工商信息用哪家、优先级是否调整 |
+| 8 | `assets/approval-replies.md` | 审批话术与退回流程习惯 |
 
-三条反直觉但关键的约束：
+改完后建议用 `examples/` 里的两个示例回归验证一遍输出结构。
 
-1. **禁止编造，包括禁止推算** —— AI 自己算出来的数字同样不可信，必须有出处。
-2. **未查到 ≠ 不存在** —— 要求显式标注「⚠️ 待补」，不许用「常规做法」填空。
-3. **不确定即人工核验** —— 银行账号、统一社会信用代码无法逐字符确认时，不允许判通过。
+## 核心设计：三条反直觉约束
+
+1. **禁止推算** —— AI 自己算出来的数字同样不可信，必须有出处或直接标待补。
+2. **未查到 ≠ 不存在** —— 要求显式区分「未提供」「不可辨认」「数据在别的系统」三态。
+3. **不确定即人工核验** —— 关键标识符无法逐字符确认时，不允许判通过。
+
+第 3 条会让 AI 显得「不敢下结论」，这是刻意的：法务初审的漏判代价远高于多问一句。
+
+## 适用前提
+
+面向**甲方/代理公司投放业务的垫款与供应商准入**场景。以下情况请谨慎：
+
+- 非广告行业（账期结构、GMV 概念不适用）。
+- 需要出具正式法律意见的场合（本技能明确不做）。
+- 单人无复核层级的团队（§5 升级路径依赖组织内有上级）。
+
+## 未包含
+
+- 自动化脚本与 `tests/`：当前为纯 Markdown 技能，无代码可测。
+- 公司级阈值校准：文中比例与天数标注「待校准」处需你自行确认。
 
 ## License
 
