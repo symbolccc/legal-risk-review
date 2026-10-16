@@ -112,3 +112,6 @@ foreach ($existing in Get-ChildItem -LiteralPath $distDir -Filter '*.md' -File) 
 Write-Output ('skills_built=' + $built.Count + ' total_mismatches=' + $totalBad)
 if ($totalBad -gt 0) { exit 1 }
 Write-Output 'BUILD_OK'
+# Explicit success code: a script that falls off the end leaves $LASTEXITCODE unset,
+# which a caller cannot distinguish from failure.
+exit 0
