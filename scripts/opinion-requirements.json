@@ -42,7 +42,8 @@
       ],
       "check_min_terms": 5,
       "require_equals": false,
-      "must_name_each_defect": true
+      "must_name_each_defect": true,
+      "require_formula": true
     },
     "seal": {
       "label": "合同用印与归档",
@@ -54,7 +55,9 @@
       ],
       "check_terms": ["逐页", "骑缝", "最终版", "命名", "签收"],
       "check_min_terms": 2,
-      "require_equals": false
+      "require_equals": false,
+      "declared_copies_pattern": "(?:一式|载明|合同约定)\\s*(\\d+)\\s*份",
+      "actual_copies_pattern": "(?:共|实际用印|全部)\\s*(\\d+)\\s*份"
     }
   }
 }

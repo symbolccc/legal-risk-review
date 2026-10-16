@@ -29,7 +29,7 @@ $buckets = @(
     # silently emptied directory into a red build, not to track growth.
     [pscustomobject]@{ Name = 'supplier golden'; Dir = 'evals\supplier'; Min = 6; MustPass = $true  }
     [pscustomobject]@{ Name = 'legal golden';    Dir = 'evals\legal';    Min = 5; MustPass = $true  }
-    [pscustomobject]@{ Name = 'negative';        Dir = 'evals\invalid';  Min = 8; MustPass = $false }
+    [pscustomobject]@{ Name = 'negative';        Dir = 'evals\invalid';  Min = 10; MustPass = $false }
 )
 
 $failures = @()

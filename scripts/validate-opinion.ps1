@@ -106,7 +106,33 @@ if ($p.must_name_each_defect) {
     }
 }
 
-# 6. evidence gaps must not coexist with a bare clean verdict
+# 6. arithmetic re-check: a stated formula must actually compute.
+#    This is what catches "both sides agree on the same wrong number" - comparing the
+#    settlement against the contract cannot detect that, only recomputing can.
+if ($names -contains 'require_formula' -and $p.require_formula) {
+    # U+00D7 multiplication sign, U+FF1D fullwidth equals, built from code points.
+    $times = [string][char]0x00D7
+    $feq   = [string][char]0xFF1D
+    $rx = '([\d][\d,\.]*)\s*(?:' + [regex]::Escape($times) + '|\*)\s*([\d\.]+)\s*%\s*(?:=|' +
+          [regex]::Escape($feq) + ')\s*([\d][\d,\.]*)'
+    $ms = [regex]::Matches($doc, $rx)
+    if ($ms.Count -eq 0) {
+        Add-V 'no explicit arithmetic formula found; tax and totals must be recomputed in the document, not just compared'
+    }
+    foreach ($m in $ms) {
+        $ci = [System.Globalization.CultureInfo]::InvariantCulture
+        $base = [double]::Parse(($m.Groups[1].Value -replace ',', ''), $ci)
+        $rate = [double]::Parse($m.Groups[2].Value, $ci)
+        $claim = [double]::Parse(($m.Groups[3].Value -replace ',', ''), $ci)
+        $expect = [math]::Round($base * $rate / 100.0, 2)
+        if ([math]::Abs($expect - $claim) -gt 0.02) {
+            Add-V ('formula does not compute: ' + $base + ' x ' + $rate + '% should be ' +
+                   $expect + ' but document states ' + $claim)
+        }
+    }
+}
+
+# 7. evidence gaps must not coexist with a bare clean verdict
 $hasGap = $false
 foreach ($g in @($sh.gap_markers)) { if ($doc -match $g) { $hasGap = $true; break } }
 if ($hasGap -and $conclusion -match [string]$sh.clean_verdict_pattern) {
@@ -117,9 +143,32 @@ if ($hasGap -and $conclusion -match [string]$sh.clean_verdict_pattern) {
     }
 }
 
-# 7. credentials must never appear
+# 8. credentials must never appear
+#    (renumbered below after the copy-count check was added)
 foreach ($fp in @($sh.forbidden_patterns)) {
     if ($doc -match $fp) { Add-V ('document contains a credential-like pattern: ' + $fp) }
+}
+
+# 9. stamped copies must never exceed the contract's stated count.
+#    An extra sealed original that escapes the archive is an uncontrolled liability.
+if ($names -contains 'declared_copies_pattern') {
+    $dm = [regex]::Match($doc, [string]$p.declared_copies_pattern)
+    $am = [regex]::Match($doc, [string]$p.actual_copies_pattern)
+    if ($dm.Success -and $am.Success) {
+        $declared = [int]$dm.Groups[1].Value
+        $actual = [int]$am.Groups[1].Value
+        if ($actual -gt $declared) {
+            Add-V ("stamped copies (" + $actual + ") exceed the contract's stated count (" +
+                   $declared + ") - stop and escalate")
+        }
+        elseif ($actual -lt $declared) {
+            Add-V ("stamped copies (" + $actual + ") fewer than stated (" + $declared +
+                   ") - verify nothing was missed")
+        }
+    }
+    elseif (-not $dm.Success) {
+        Add-V 'contract-stated copy count is missing - cannot verify over-stamping'
+    }
 }
 
 Write-Output ('file=' + (Split-Path -Leaf $InputPath) + ' profile=' + $profileName)
