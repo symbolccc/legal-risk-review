@@ -18,13 +18,32 @@
 | 附录 F | 标准审批话术对照表 | `assets/approval-replies.md` |
 | 附录 G | 示例：账期穿透与分档 | `examples/example-payment-term.md` |
 | 附录 H | 示例：供应商审批输出与 JSON | `examples/example-supplier-review.md` |
+| 附录 I | 输出契约 JSON Schema | `schemas/review-output.schema.json` |
+
+## 可执行层（本文件之外，需 clone 仓库）
+
+规则里凡是**确定性计算**，都不该交给模型。仓库提供零依赖脚本，Windows PowerShell 5.1 与 pwsh 通用：
+
+| 脚本 | 作用 |
+| :-- | :-- |
+| `scripts/validate-uscc.ps1` | 统一社会信用代码格式与 GB 32100-2015 校验位重算 |
+| `scripts/validate-output.ps1` | 校验输出是否符合 Schema **且**结论与 checks 自洽 |
+| `scripts/run-evals.ps1` | 跑评测：golden 必须通过，负例必须被拦且理由正确 |
+| `tests/test-uscc.ps1` | 校验位单测，含 540 个单字符变异全检 |
+| `scripts/scan-secrets.ps1` | 凭据与隐私数据扫描 |
+
+CI（`.github/workflows/ci.yml`）在 ubuntu 与 windows 双平台跑上述全部检查，并强制
+`dist/` 与源文件同步、`.ps1` 保持纯 ASCII。
+
+> 单文件版可独立阅读；要真正落地审核，建议 clone 仓库使用脚本层，
+> 让「校验位对不对」「结论自不自洽」由代码判定而不是由模型自觉。
 
 ---
 
 ---
 name: legal-risk-review
 description: 广告营销公司法务风控审核口径。用于撰写客户垫款意见与风控意见、审理返点及客户/媒体结算单、供应商入库审批（营业执照、银行信息、一般纳税人、跨境口径、主体存续性）、合同用印与原件归档。当用户要求出风控意见、垫款意见、审结算单、核供应商材料、写审批话术、判断单据能否通过，或需要推算账期与垫款敞口时使用。
-version: 1.1.0
+version: 1.2.0
 license: MIT
 author: symbolccc
 ---
@@ -58,10 +77,11 @@ author: symbolccc
 
 1. 确认被审对象属于哪一类：垫款/风控意见、结算单审理、供应商入库、用印归档。
 2. 按 `references/source-contract.md` 的来源优先级收集证据；**先确认附件类型与用途匹配，再谈字段比对**；记录实际读到了哪些、哪些没读到。
-3. 供应商入库先过第 0 步硬校验（信用代码格式与校验位、主体存续性），再做逐字段判定 `pass` / `fail` / `uncertain`。
+3. 供应商入库先过第 0 步硬校验：**信用代码格式与校验位一律用 `scripts/validate-uscc.ps1` 判定，不得心算**；再核主体存续性，然后逐字段判定 `pass` / `fail` / `uncertain`。
 4. 按 §4 分档，按 §5 判断是否升级。
 5. 用 `assets/` 对应模板输出，不自创结构。
-6. 过 §7 自检清单后才交付。
+6. 输出为 JSON 时，必须过 `scripts/validate-output.ps1`——它同时检查 Schema 与「结论是否由 checks 推出」，会拦下「有 uncertain 却标 high」这类自相矛盾。
+7. 过 §7 自检清单后才交付。
 
 ## 2. 垫款 / 风控意见
 
@@ -217,23 +237,49 @@ author: symbolccc
 - **不判商业合理性**：注册资本过低、成立过短、参保人极少，只提示事实，放行与否由人决定。
 - **依赖第三方数据新鲜度**：R4 基准若 OA 带出的是过期快照，本技能无法察觉。
 
-## 10. 文件地图
+## 10. 可执行层：确定性计算不交给模型
+
+本技能把「有唯一正确答案的部分」全部下沉为脚本，模型只负责读字符、比字符、写理由。
+
+| 脚本 | 解决什么 | 为什么不能交给模型 |
+| :-- | :-- | :-- |
+| `../../scripts/validate-uscc.ps1` | 信用代码格式与 GB 32100-2015 校验位 | 模型会算错模运算，且不会承认自己算错 |
+| `../../scripts/validate-output.ps1` | Schema 合规 + 结论与 checks 自洽 | 「有 uncertain 却标 high」这种矛盾，模型自查经常漏掉 |
+| `../../scripts/run-evals.ps1` | 回归评测 | 规则改动后需要证明没把对的判例改坏 |
+| `../../tests/test-uscc.ps1` | 校验位单测（含 540 个单字符变异全检） | 证明实现真的能抓错，而不是自洽而已 |
+
+**使用要求**：
+
+- 供应商入库时，信用代码必须过脚本；脚本判 fail 就是 fail，模型不得以「看起来是笔误」推翻。
+- 输出 JSON 必须过 `validate-output.ps1`；被拦下时**修结论，不修规则**。
+- 改任何规则后跑 `run-evals.ps1`，golden 与负例必须全绿才允许发布。
+- 负例集是防线的防线：它保证校验器不是摆设。新增一类错误，就补一个负例。
+
+## 11. 文件地图
 
 ```
-skills/legal-risk-review/
-├── SKILL.md                          本文件（主干）
-├── README.md                         技能级说明
-├── references/
-│   ├── source-contract.md            来源优先级、附件类型校验、缺失四态
-│   ├── supplier-rules.md             第 0 步硬校验 + R0–R12、已知限制
-│   ├── settlement-review.md          五类审理与全维度核对项
-│   └── contract-seal.md              用印与归档八段流程
-├── assets/
-│   ├── risk-opinion-template.md      垫款/风控意见可填骨架
-│   └── approval-replies.md           标准审批话术对照表
-└── examples/
-    ├── example-payment-term.md       账期穿透与分档示例
-    └── example-supplier-review.md    供应商审批输出与 JSON 示例
+legal-risk-review/
+├── skills/legal-risk-review/
+│   ├── SKILL.md                        本文件（主干）
+│   ├── README.md                       加载顺序与按任务取文件路由
+│   ├── references/
+│   │   ├── source-contract.md          来源优先级、附件类型校验、缺失四态
+│   │   ├── supplier-rules.md           第 0 步硬校验 + R0–R12、已知限制
+│   │   ├── settlement-review.md        五类审理与全维度核对项
+│   │   └── contract-seal.md            用印与归档八段流程
+│   ├── assets/
+│   │   ├── risk-opinion-template.md    垫款/风控意见可填骨架
+│   │   └── approval-replies.md         标准审批话术对照表
+│   └── examples/
+│       ├── example-payment-term.md     账期穿透与分档示例
+│       └── example-supplier-review.md  供应商审批输出与 JSON 示例
+├── schemas/review-output.schema.json   输出契约（枚举即规范）
+├── scripts/                            可执行层（纯 ASCII，PS 5.1 与 pwsh 通用）
+├── tests/                              校验位单测
+├── evals/cases/                        golden：必须通过
+├── evals/invalid/                      负例：必须被拦且理由正确
+├── dist/                               单文件分享版（构建产物）
+└── .github/workflows/ci.yml            双平台门禁
 ```
 
 
@@ -829,3 +875,73 @@ AI 审查：建议打回
 5. 注销主体即使材料齐全也不能通过——这是 R10 存在的理由。
 6. `model_notes` 里必须写清读了哪些来源、哪些没读到。
 7. 只填入意见，**不触发提交**。
+
+
+
+---
+
+# Appendix I - schemas/review-output.schema.json
+
+Normative output contract, enforced by `scripts/validate-output.ps1`.
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/symbolccc/legal-risk-review/schemas/review-output.schema.json",
+  "title": "Legal risk review output",
+  "description": "Envelope contract for every review produced by the legal-risk-review skill. Enumerations are normative: an out-of-enum value invalidates the whole result and must be escalated to a human, never auto-corrected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "overall_result", "confidence", "checks", "issues", "approval_comment"],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "OA case number. Must be re-bound per document; never reuse the previous case."
+    },
+    "overall_result": {
+      "enum": ["建议通过", "建议打回", "需人工核验"],
+      "description": "Derived from checks by the tiering rules in SKILL.md section 4."
+    },
+    "confidence": {
+      "enum": ["high", "medium", "low"],
+      "description": "low whenever any check is uncertain; high requires zero uncertain checks."
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check_id", "result", "field", "reason", "requires_human_review"],
+        "properties": {
+          "check_id": { "type": "string", "minLength": 1 },
+          "result": { "enum": ["pass", "fail", "uncertain", "not_applicable"] },
+          "field": { "type": "string", "minLength": 1 },
+          "form_value": { "type": ["string", "null"] },
+          "evidence_value": { "type": ["string", "null"] },
+          "evidence_source": {
+            "enum": [
+              "营业执照", "银行开户证明", "纳税人证明", "附件",
+              "第三方工商数据", "OA表单", "部门口径 R1", "部门口径 R2",
+              "规则未配置", "未提供", "GB 32100-2015 本地校验", "其他"
+            ]
+          },
+          "reason": { "type": "string", "minLength": 1 },
+          "requires_human_review": { "type": "boolean" }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "approval_comment": { "type": "string", "minLength": 1 },
+    "model_notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Must state which sources were read and which could not be read."
+    }
+  }
+}
+```

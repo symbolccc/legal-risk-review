@@ -14,11 +14,16 @@
 ```
 legal-risk-review/
 ├── SKILL 主体  skills/legal-risk-review/SKILL.md
-├── references/   按需加载的细则（R1–R9、五类审理、用印、证据契约）
+├── references/   按需加载的细则（R0–R12、五类审理、用印、证据契约）
 ├── assets/       可填模板与标准话术
 ├── examples/     脱敏示例（含 JSON 输出）
+├── schemas/      输出契约 JSON Schema（枚举即规范）
+├── scripts/      可执行层：校验位、输出自洽校验、评测、扫描、构建
+├── tests/        校验位单测（含 540 个单字符变异全检）
+├── evals/cases/  golden 用例：必须通过
+├── evals/invalid/ 负例：必须被拦且理由正确
 ├── dist/         单文件分享版（构建产物，整段粘贴用）
-├── scripts/      build-dist.ps1 重新生成 dist/
+├── .github/workflows/ci.yml   ubuntu + windows 双平台门禁
 ├── CHANGELOG.md
 └── LICENSE       MIT
 ```
@@ -74,18 +79,19 @@ npx skills add symbolccc/legal-risk-review@legal-risk-review
 | 2 | `SKILL.md` §2.3 | GMV 时效规则（哪一年看哪一段） |
 | 3 | `SKILL.md` §2.2 | 电商固定档天数、穿透各段口径 |
 | 4 | `SKILL.md` §4 §5 | 分档阈值与升级触发的组织层级 |
-| 5 | `references/supplier-rules.md` | 部门归类名单、R1–R9 规则本身 |
-| 6 | `references/supplier-rules.md` | 六项「未确认」是否已在贵司确认 |
+| 5 | `references/supplier-rules.md` | 部门归类名单、R0–R12 规则本身 |
+| 6 | `references/supplier-rules.md` | 七项「未确认」是否已在贵司确认 |
 | 7 | `references/source-contract.md` | 第三方工商信息用哪家、优先级是否调整 |
 | 8 | `assets/approval-replies.md` | 审批话术与退回流程习惯 |
 
 改完后建议用 `examples/` 里的两个示例回归验证一遍输出结构。
 
-## 核心设计：三条反直觉约束
+## 核心设计：四条反直觉约束
 
 1. **禁止推算** —— AI 自己算出来的数字同样不可信，必须有出处或直接标待补。
 2. **未查到 ≠ 不存在** —— 要求显式区分「未提供」「不可辨认」「数据在别的系统」三态。
 3. **不确定即人工核验** —— 关键标识符无法逐字符确认时，不允许判通过。
+4. **确定性计算交给代码** —— 校验位、枚举合规、结论自洽一律由脚本判定，不靠模型自觉；并用负例集证明校验器真的在工作。
 
 第 3 条会让 AI 显得「不敢下结论」，这是刻意的：法务初审的漏判代价远高于多问一句。
 
@@ -97,10 +103,24 @@ npx skills add symbolccc/legal-risk-review@legal-risk-review
 - 需要出具正式法律意见的场合（本技能明确不做）。
 - 单人无复核层级的团队（§5 升级路径依赖组织内有上级）。
 
+## 验证与回归
+
+脚本零外部依赖，Windows PowerShell 5.1 与 pwsh 7 通用：
+
+```powershell
+./tests/test-uscc.ps1          # 校验位单测
+./scripts/run-evals.ps1        # golden 必须通过，负例必须被拦且理由正确
+./scripts/scan-secrets.ps1     # 凭据与隐私扫描
+./scripts/build-dist.ps1       # 重建 dist/ 并校验源文件逐字复现
+```
+
+关键设计是**负例集**：`evals/invalid/` 存放故意做坏的审核结果，校验器必须逐条拦下。
+它首次运行就暴露了校验器把违规静默丢弃的缺陷——没有这一半，校验器是不是摆设无人知晓。
+
 ## 未包含
 
-- 自动化脚本与 `tests/`：当前为纯 Markdown 技能，无代码可测。
 - 公司级阈值校准：文中比例与天数标注「待校准」处需你自行确认。
+- 端到端系统集成测试：与具体审批系统（OA 等）的对接需在目标环境自行验证。
 
 ## License
 

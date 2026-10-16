@@ -1,0 +1,24 @@
+{
+  "case_id": "EVAL-NEG-003",
+  "overall_result": "通过",
+  "confidence": "high",
+  "checks": [
+    {
+      "check_id": "entity_status",
+      "result": "maybe",
+      "field": "经营状态",
+      "form_value": "存续",
+      "evidence_value": "存续",
+      "evidence_source": "第三方工商数据",
+      "reason": "大概是存续",
+      "requires_human_review": false
+    }
+  ],
+  "issues": [],
+  "approval_comment": "通过。",
+  "model_notes": [],
+  "_expect": {
+    "valid": false,
+    "must_contain": ["overall_result not in enum", ".result not in enum"]
+  }
+}

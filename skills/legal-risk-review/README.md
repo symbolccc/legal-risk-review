@@ -23,7 +23,13 @@
 | 审返点/结算单 | §1 | `references/settlement-review.md`、`assets/approval-replies.md` |
 | 合同用印归档 | §1 | `references/contract-seal.md` |
 | 判断是否升级 | §5 | `references/source-contract.md` |
+| 核供应商信用代码 | §10 | `../../../scripts/validate-uscc.ps1`（必须用脚本，不得心算） |
+| 校验输出是否自洽 | §10 | `../../../scripts/validate-output.ps1` |
 
 ## 依赖
 
-无。纯 Markdown，不调用脚本、不需要 API Key，任何能读文件的 Agent 均可使用。
+**规则阅读零依赖**：纯 Markdown，不需要 API Key，任何能读文件的 Agent 均可直接使用主干与细则。
+
+**可执行层可选但强烈建议**：`scripts/` 与 `tests/` 为零依赖 PowerShell，Windows PowerShell 5.1 与
+pwsh 7 通用，用于信用代码校验位、输出自洽校验与回归评测。无法运行脚本时，主干仍可用，
+但 §10 列出的三项确定性判定会退回「由模型自查」，可靠性下降，应在结论中声明该局限。

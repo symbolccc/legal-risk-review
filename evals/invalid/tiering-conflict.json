@@ -1,0 +1,34 @@
+{
+  "case_id": "EVAL-NEG-002",
+  "overall_result": "需人工核验",
+  "confidence": "low",
+  "checks": [
+    {
+      "check_id": "supplier_type_by_department",
+      "result": "fail",
+      "field": "供应商类型",
+      "form_value": "费用类",
+      "evidence_value": "成本类",
+      "evidence_source": "部门口径 R1",
+      "reason": "业务部门应为成本类",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "cross_border_business",
+      "result": "uncertain",
+      "field": "是否跨境业务",
+      "form_value": "否",
+      "evidence_value": "未提供",
+      "evidence_source": "规则未配置",
+      "reason": "境外标准未配置",
+      "requires_human_review": true
+    }
+  ],
+  "issues": ["供应商类型与部门口径不符"],
+  "approval_comment": "存在 fail 项，整体应判打回而不是需人工核验。",
+  "model_notes": [],
+  "_expect": {
+    "valid": false,
+    "must_contain": ["tiering conflict"]
+  }
+}

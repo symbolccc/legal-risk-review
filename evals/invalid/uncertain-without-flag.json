@@ -1,0 +1,24 @@
+{
+  "case_id": "EVAL-NEG-004",
+  "overall_result": "需人工核验",
+  "confidence": "low",
+  "checks": [
+    {
+      "check_id": "bank_account",
+      "result": "uncertain",
+      "field": "收款账号",
+      "form_value": "622202XXXXXXXXXXXX",
+      "evidence_value": "附件反光，中段不可辨",
+      "evidence_source": "银行开户证明",
+      "reason": "无法逐字符确认",
+      "requires_human_review": false
+    }
+  ],
+  "issues": [],
+  "approval_comment": "账号需人工核验。",
+  "model_notes": [],
+  "_expect": {
+    "valid": false,
+    "must_contain": ["uncertain but requires_human_review is not true"]
+  }
+}

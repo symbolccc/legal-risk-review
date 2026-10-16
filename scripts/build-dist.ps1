@@ -41,6 +41,15 @@ foreach ($k in $appendices.Keys) {
     $body = ReadU8 (Join-Path $skill $rel)
     $parts += ($sep + '# Appendix ' + $k + ' - ' + ($rel -replace '\\', '/') + "`n`n" + $body)
 }
+
+# The output schema lives at repo root, outside the skill folder. Including it keeps the
+# single-file build self-contained: a reader can validate results without cloning.
+$schemaRel = 'schemas\review-output.schema.json'
+$schemaText = (ReadU8 (Join-Path $root $schemaRel)).Trim()
+$parts += ($sep + '# Appendix I - schemas/review-output.schema.json' + "`n`n" +
+    'Normative output contract, enforced by `scripts/validate-output.ps1`.' + "`n`n" +
+    '```json' + "`n" + $schemaText + "`n" + '```')
+
 $text = ($parts -join "`n")
 [System.IO.File]::WriteAllText($out, $text, $utf8)
 
@@ -60,6 +69,13 @@ foreach ($rel in (@('SKILL.md') + ($appendices.Values | ForEach-Object { $_ })))
         Write-Output ('  MISMATCH     ' + $rel)
         $bad++
     }
+}
+if ($full.Contains($schemaText)) {
+    Write-Output ('  VERBATIM_OK  ' + $schemaRel)
+}
+else {
+    Write-Output ('  MISMATCH     ' + $schemaRel)
+    $bad++
 }
 Write-Output ('mismatches=' + $bad)
 if ($bad -gt 0) { exit 1 }

@@ -2,6 +2,33 @@
 
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## v1.2.0 — 2026-10-16
+
+把「有唯一正确答案的部分」从提示词下沉为可执行代码，并建立回归防线。
+
+### Added
+
+- `schemas/review-output.schema.json`：输出契约。枚举即规范，非法枚举值使整条结论作废并转人工，不自动纠正。
+- `scripts/validate-uscc.ps1`：统一社会信用代码格式与 GB 32100-2015 校验位重算。可抓出「表单与附件填了同一个错码」这类比对无法发现的问题。
+- `scripts/validate-output.ps1`：双层校验——Schema 合规 + 结论与 checks 自洽。专门拦「有 uncertain 却标 confidence: high」这类矛盾。
+- `scripts/run-evals.ps1`：评测执行器。golden 必须通过，负例必须被拦且**理由正确**。
+- `evals/cases/` 6 个 golden：成本/费用填反、地址层级省略与注册资本写法差异、模糊附件、注销主体、校验位失败、附件类型不符。
+- `evals/invalid/` 5 个负例：枚举非法、分档矛盾、置信度矛盾、uncertain 未标记、有 fail 但 issues 为空。
+- `tests/test-uscc.ps1`：校验位单测，含 540 个单字符变异全检（汉明距离 1 完整覆盖）。
+- `.github/workflows/ci.yml`：ubuntu 与 windows 双平台门禁，含 dist 可重现性检查与 .ps1 纯 ASCII 检查。
+
+### Fixed
+
+- **校验器形同虚设的缺陷**：`Add-V` 写入 `$global:v` 而汇总读取脚本作用域的 `$v`，导致所有违规被静默丢弃、任何输入都判通过。由负例集当场暴露并修复——这正是负例存在的意义。
+- **扫描器自指误报**：`scan-secrets.ps1` 命中自身模式表，已排除自身文件。
+- **评测数据含 16 位连续数字**：会被识别为真实卡号，已改为占位形式。
+
+### Changed
+
+- 工作流程新增两步：信用代码必须过脚本判定；输出 JSON 必须过自洽校验。
+- 单文件分享版纳入 Schema（附录 I），可独立查阅输出契约。
+- 脚本层统一纯 ASCII：Windows PowerShell 5.1 将无 BOM 的 UTF-8 脚本按 ANSI 解析，中文注释会直接导致语法错误。
+
 ## v1.1.0 — 2026-10-15
 
 对供应商入库审批模块做逆向检查后修补。修复 5 处可导致误判的问题，另补 10 处歧义与缺口。

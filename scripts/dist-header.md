@@ -18,5 +18,24 @@
 | 附录 F | 标准审批话术对照表 | `assets/approval-replies.md` |
 | 附录 G | 示例：账期穿透与分档 | `examples/example-payment-term.md` |
 | 附录 H | 示例：供应商审批输出与 JSON | `examples/example-supplier-review.md` |
+| 附录 I | 输出契约 JSON Schema | `schemas/review-output.schema.json` |
+
+## 可执行层（本文件之外，需 clone 仓库）
+
+规则里凡是**确定性计算**，都不该交给模型。仓库提供零依赖脚本，Windows PowerShell 5.1 与 pwsh 通用：
+
+| 脚本 | 作用 |
+| :-- | :-- |
+| `scripts/validate-uscc.ps1` | 统一社会信用代码格式与 GB 32100-2015 校验位重算 |
+| `scripts/validate-output.ps1` | 校验输出是否符合 Schema **且**结论与 checks 自洽 |
+| `scripts/run-evals.ps1` | 跑评测：golden 必须通过，负例必须被拦且理由正确 |
+| `tests/test-uscc.ps1` | 校验位单测，含 540 个单字符变异全检 |
+| `scripts/scan-secrets.ps1` | 凭据与隐私数据扫描 |
+
+CI（`.github/workflows/ci.yml`）在 ubuntu 与 windows 双平台跑上述全部检查，并强制
+`dist/` 与源文件同步、`.ps1` 保持纯 ASCII。
+
+> 单文件版可独立阅读；要真正落地审核，建议 clone 仓库使用脚本层，
+> 让「校验位对不对」「结论自不自洽」由代码判定而不是由模型自觉。
 
 ---

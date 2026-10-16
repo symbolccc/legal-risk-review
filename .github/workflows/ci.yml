@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    name: Validate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: USCC check-digit unit tests
+        shell: pwsh
+        run: ./tests/test-uscc.ps1
+
+      - name: Evaluation suite (golden + negative)
+        shell: pwsh
+        run: ./scripts/run-evals.ps1
+
+      - name: Secret and private-data scan
+        shell: pwsh
+        run: ./scripts/scan-secrets.ps1
+
+      - name: dist must be reproducible from sources
+        shell: pwsh
+        run: |
+          ./scripts/build-dist.ps1
+          git add -A dist
+          git diff --cached --exit-code -- dist
+          if ($LASTEXITCODE -ne 0) {
+            Write-Output 'dist/ is stale - run scripts/build-dist.ps1 and commit the result.'
+            exit 1
+          }
+          Write-Output 'DIST_IN_SYNC'
+
+      - name: Every shipped file is pure ASCII where it must be
+        shell: pwsh
+        run: |
+          $bad = @()
+          Get-ChildItem -Path scripts,tests -Filter '*.ps1' -File | ForEach-Object {
+            $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
+            foreach ($b in $bytes) { if ($b -gt 127) { $bad += $_.Name; break } }
+          }
+          if ($bad.Count -gt 0) {
+            Write-Output 'PowerShell sources must stay ASCII-only (PS 5.1 reads BOM-less UTF-8 as ANSI):'
+            $bad | ForEach-Object { Write-Output ('  ' + $_) }
+            exit 1
+          }
+          Write-Output 'ASCII_CHECK=PASS'
