@@ -23,6 +23,44 @@ jobs:
         shell: pwsh
         run: ./scripts/run-evals.ps1
 
+      - name: Eval files are actually tracked by git
+        shell: pwsh
+        run: |
+          # A bare `cases/` pattern in .gitignore once removed the entire golden set from
+          # CI checkouts while the suite still reported green. Count tracked files here so
+          # that class of silent loss fails loudly.
+          $tracked = @(git ls-files 'evals/supplier/*.json' 'evals/legal/*.md' 'evals/invalid/*')
+          Write-Output ('tracked_eval_files=' + $tracked.Count)
+          if ($tracked.Count -lt 14) {
+            Write-Output 'Too few eval files tracked - check .gitignore anchoring.'
+            exit 1
+          }
+          Write-Output 'EVAL_TRACKING=PASS'
+
+      - name: Every skill is well-formed
+        shell: pwsh
+        run: |
+          $bad = 0
+          foreach ($d in Get-ChildItem skills -Directory) {
+            $md = Join-Path $d.FullName 'SKILL.md'
+            if (-not (Test-Path -LiteralPath $md)) {
+              Write-Output ('  NO_SKILL_MD  ' + $d.Name); $bad++; continue
+            }
+            $txt = [System.IO.File]::ReadAllText($md, [System.Text.Encoding]::UTF8)
+            $name = [regex]::Match($txt, '(?m)^name:\s*(\S+)\s*$').Groups[1].Value
+            $ver  = [regex]::Match($txt, '(?m)^version:\s*(\S+)\s*$').Groups[1].Value
+            $desc = [regex]::Match($txt, '(?m)^description:\s*(.+)$').Groups[1].Value
+            if ($name -ne $d.Name) { Write-Output ('  NAME_MISMATCH  ' + $d.Name + ' vs ' + $name); $bad++ }
+            if (-not $ver)         { Write-Output ('  NO_VERSION     ' + $d.Name); $bad++ }
+            if ($desc.Length -lt 40) { Write-Output ('  THIN_DESC      ' + $d.Name); $bad++ }
+            if ($desc -and $desc -notmatch '([Uu]se when|当.*时|用于)') {
+              Write-Output ('  NO_TRIGGER_CLAUSE  ' + $d.Name); $bad++
+            }
+            Write-Output ('  ok  ' + $d.Name + ' v' + $ver)
+          }
+          if ($bad -gt 0) { exit 1 }
+          Write-Output 'SKILLS_WELL_FORMED=PASS'
+
       - name: Secret and private-data scan
         shell: pwsh
         run: ./scripts/scan-secrets.ps1
