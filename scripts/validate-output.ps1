@@ -30,7 +30,8 @@ $ErrorActionPreference = 'Stop'
 
 if (-not $SchemaPath) {
     $repoRoot = Split-Path -Parent $PSScriptRoot
-    $SchemaPath = Join-Path $repoRoot 'schemas\review-output.schema.json'
+    # Renamed in v1.3.0: this contract belongs to the OA supplier-review program only.
+    $SchemaPath = Join-Path $repoRoot 'schemas\supplier-review-output.schema.json'
 }
 if (-not (Test-Path -LiteralPath $SchemaPath)) {
     Write-Output ('SCHEMA_NOT_FOUND ' + $SchemaPath); exit 1

@@ -9,9 +9,13 @@ credentials*
 secrets*
 tokens*
 
-# Real case material (client documents, licenses, bank proofs)
-cases/
-attachments/
+# Real case material must never be committed.
+# Anchor these patterns to the repo root. A bare `cases/` also matches evals/cases/,
+# which silently deletes the golden test set from every CI checkout - CI then reports
+# green while only the negative cases run. Use /cases/ instead.
+/cases/
+/attachments/
+/evals/private/
 *.pdf
 *.xlsx
 

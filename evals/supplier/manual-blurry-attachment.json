@@ -1,0 +1,41 @@
+{
+  "case_id": "OA-GOLD-0003",
+  "overall_result": "需人工核验",
+  "confidence": "low",
+  "checks": [
+    {
+      "check_id": "bank_account",
+      "result": "uncertain",
+      "field": "收款账号",
+      "form_value": "622202XXXXXXXXXXXX",
+      "evidence_value": "附件反光，中段不可辨认",
+      "evidence_source": "银行开户证明",
+      "reason": "无法逐字符确认，不得判 pass",
+      "requires_human_review": true
+    },
+    {
+      "check_id": "bank_name",
+      "result": "uncertain",
+      "field": "开户行名称",
+      "form_value": "某行某支行",
+      "evidence_value": "附件为简称",
+      "evidence_source": "银行开户证明",
+      "reason": "银行名称简称是否允许属未确认项",
+      "requires_human_review": true
+    },
+    {
+      "check_id": "entity_status",
+      "result": "pass",
+      "field": "经营状态",
+      "form_value": "在业",
+      "evidence_value": "在业",
+      "evidence_source": "第三方工商数据",
+      "reason": "主体存续",
+      "requires_human_review": false
+    }
+  ],
+  "issues": [],
+  "approval_comment": "银行账号与开户行信息无法从附件逐字符确认，需人工核验原件。",
+  "model_notes": ["附件已读取但关键字段不可辨认", "未查询：失信名单（超出本技能范围）"],
+  "_expect": { "valid": true }
+}

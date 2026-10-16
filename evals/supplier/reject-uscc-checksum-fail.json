@@ -1,0 +1,31 @@
+{
+  "case_id": "OA-GOLD-0005",
+  "overall_result": "建议打回",
+  "confidence": "high",
+  "checks": [
+    {
+      "check_id": "uscc_checksum",
+      "result": "fail",
+      "field": "统一社会信用代码",
+      "form_value": "92350100M000100Y43",
+      "evidence_value": "校验位应为 0，实际为 3",
+      "evidence_source": "GB 32100-2015 本地校验",
+      "reason": "校验位不匹配，存在录入错误或伪造；表单与附件一致也不能放行",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "unified_social_credit_code",
+      "result": "pass",
+      "field": "统一社会信用代码（逐字符比对）",
+      "form_value": "92350100M000100Y43",
+      "evidence_value": "92350100M000100Y43",
+      "evidence_source": "营业执照",
+      "reason": "字符一致，但一致性不等于正确性，校验位已单独判 fail",
+      "requires_human_review": false
+    }
+  ],
+  "issues": ["统一社会信用代码校验位不符"],
+  "approval_comment": "统一社会信用代码校验位不匹配，请核对后重新提交。",
+  "model_notes": ["校验位由 scripts/validate-uscc.ps1 本地重算，不依赖模型判断"],
+  "_expect": { "valid": true }
+}

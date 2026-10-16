@@ -2,6 +2,46 @@
 
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## v1.3.0 — 2026-10-16
+
+拆分为两个技能。此前把 OA 自动化项目的输出契约与工程约束，当成了通用法务审核口径。
+
+### Changed
+
+- **仓库现在包含两个独立技能**：`legal-risk-review`（文书类审核，输出中文文书）与
+  `oa-supplier-review`（供应商入库，输出 JSON）。资金方向相反，结论口径不可互相套用。
+- `schemas/review-output.schema.json` → `schemas/supplier-review-output.schema.json`，
+  描述明确限定为供应商程序专用，不再自称「适用于所有审核」。
+- 工程实现约束（API Key 位置、内存处理、超时重试、不自动提交、串单防护）从审核细则
+  `supplier-rules.md` 移入 `oa-supplier-review` 的独立章节。
+- `legal-risk-review` 主干移除供应商内容，改为指向另一技能。
+- `build-dist.ps1` 改为自动发现每个技能的源文件，按技能各自出版本号，
+  并检测陈旧构建产物。
+
+### Added
+
+- `scripts/validate-opinion.ps1` + `scripts/opinion-requirements.json`：
+  中文文书的结构校验——必需段落、结论三要素、穿透算式是否写出、
+  **有证据缺口却声称无异议**。段落词表放配置文件，脚本保持纯 ASCII。
+- `evals/legal/` 2 个文书 golden：双线账期穿透、GMV 缺失但正确标注待补。
+- `evals/invalid/opinion-gap-but-clean.md` 文书负例。
+- `skills/oa-supplier-review/`：R1–R12、页面结构事实、七项未确认、工程约束、自检。
+- CI 新增两项门禁：
+  - **评测文件跟踪数断言**（防止 `.gitignore` 再次静默吞掉 golden）
+  - **技能规范性检查**（目录名与 `name:` 一致、有 version、description 含触发条件）
+- `run-evals.ps1` 新增**用例数量下限断言**：目录缺失或被忽略时报红，不再静默通过。
+- `run-evals.ps1` 按扩展名分派校验器：`.json` 走契约校验，`.md` 走文书校验。
+
+### Fixed
+
+- **`.gitignore` 的裸 `cases/` 吞掉了 `evals/cases/`**：6 个 golden 从未进入版本库，
+  CI 因此只跑负例却报告全绿。已锚定为 `/cases/`，并加断言防复发。
+- **评测器跨文件泄漏期望值**：`.md` 用例没有 `_expect`，会沿用上一个 `.json` 的期望理由，
+  导致校验器正确拦截却被判为 WRONG-REASON。改为每个文件独立重置。
+- **等号检查作用域错误**：穿透算式位于账期段落而非结论段落，原实现误判合规文书。
+- `Split-Path -Extension` 不存在，改用 `[System.IO.Path]::GetExtension`。
+- `validate-opinion.ps1` 中的中文字面量违反纯 ASCII 约束，改由配置文件提供。
+
 ## v1.2.0 — 2026-10-16
 
 把「有唯一正确答案的部分」从提示词下沉为可执行代码，并建立回归防线。

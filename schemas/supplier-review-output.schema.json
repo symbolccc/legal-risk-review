@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/symbolccc/legal-risk-review/schemas/review-output.schema.json",
+  "title": "OA supplier onboarding review output",
+  "description": "Output contract for the oa-supplier-review skill only, consumed by the Edge extension sidebar. It is NOT a universal contract: the legal-risk-review skill produces Chinese prose documents (payment-term and risk opinions), which have their own structure checker. Enumerations are normative: an out-of-enum value invalidates the whole result and must be escalated to a human, never auto-corrected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "overall_result", "confidence", "checks", "issues", "approval_comment"],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "OA case number. Must be re-bound per document; never reuse the previous case."
+    },
+    "overall_result": {
+      "enum": ["建议通过", "建议打回", "需人工核验"],
+      "description": "Derived from checks by the tiering rules in SKILL.md section 4."
+    },
+    "confidence": {
+      "enum": ["high", "medium", "low"],
+      "description": "low whenever any check is uncertain; high requires zero uncertain checks."
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check_id", "result", "field", "reason", "requires_human_review"],
+        "properties": {
+          "check_id": { "type": "string", "minLength": 1 },
+          "result": { "enum": ["pass", "fail", "uncertain", "not_applicable"] },
+          "field": { "type": "string", "minLength": 1 },
+          "form_value": { "type": ["string", "null"] },
+          "evidence_value": { "type": ["string", "null"] },
+          "evidence_source": {
+            "enum": [
+              "营业执照", "银行开户证明", "纳税人证明", "附件",
+              "第三方工商数据", "OA表单", "部门口径 R1", "部门口径 R2",
+              "规则未配置", "未提供", "GB 32100-2015 本地校验", "其他"
+            ]
+          },
+          "reason": { "type": "string", "minLength": 1 },
+          "requires_human_review": { "type": "boolean" }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "approval_comment": { "type": "string", "minLength": 1 },
+    "model_notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Must state which sources were read and which could not be read."
+    }
+  }
+}

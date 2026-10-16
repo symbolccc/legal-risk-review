@@ -1,0 +1,71 @@
+{
+  "case_id": "OA-GOLD-0002",
+  "overall_result": "建议通过",
+  "confidence": "high",
+  "checks": [
+    {
+      "check_id": "supplier_type_by_department",
+      "result": "pass",
+      "field": "供应商类型",
+      "form_value": "费用类",
+      "evidence_value": "费用类",
+      "evidence_source": "部门口径 R2",
+      "reason": "申请部门为法务（非业务部门），供应商类型应为费用类",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "registered_capital",
+      "result": "pass",
+      "field": "注册资本",
+      "form_value": "32.86 亿元",
+      "evidence_value": "328600 万元",
+      "evidence_source": "营业执照",
+      "reason": "换算后数值等价，写法差异不构成不一致",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "registered_address",
+      "result": "pass",
+      "field": "注册地址",
+      "form_value": "某某路 1 号",
+      "evidence_value": "某省某市某区某某路 1 号",
+      "evidence_source": "营业执照",
+      "reason": "省市区层级省略可接受，共有层级一致（R6）",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "entity_status",
+      "result": "pass",
+      "field": "经营状态",
+      "form_value": "存续",
+      "evidence_value": "存续",
+      "evidence_source": "第三方工商数据",
+      "reason": "主体存续（R10）",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "uscc_checksum",
+      "result": "pass",
+      "field": "统一社会信用代码",
+      "form_value": "91350100M000100Y43",
+      "evidence_value": "91350100M000100Y43",
+      "evidence_source": "GB 32100-2015 本地校验",
+      "reason": "逐字符一致且校验位匹配",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "cross_border_business",
+      "result": "not_applicable",
+      "field": "是否跨境业务",
+      "form_value": "否",
+      "evidence_value": "境内主体",
+      "evidence_source": "第三方工商数据",
+      "reason": "境内主体且申请部门非国际业务部门，R3 不适用",
+      "requires_human_review": false
+    }
+  ],
+  "issues": [],
+  "approval_comment": "经核验，申请信息与附件一致。",
+  "model_notes": ["已读取：营业执照、银行开户证明、纳税人证明、第三方工商数据"],
+  "_expect": { "valid": true }
+}

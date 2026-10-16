@@ -1,0 +1,35 @@
+{
+  "description": "Structure requirements for a payment-term / risk opinion document. Loaded by validate-opinion.ps1 so that script can stay pure ASCII.",
+  "required_sections": [
+    "客户信息",
+    "合作情况",
+    "账期说明",
+    "GMV",
+    "综上"
+  ],
+  "conclusion_must_contain_any": [
+    {
+      "label": "账期天数",
+      "patterns": ["\\d+\\s*个?自然日", "\\d+\\s*天", "\\d+\\s*个工作日"]
+    },
+    {
+      "label": "垫款判定",
+      "patterns": ["垫款", "敞口"]
+    },
+    {
+      "label": "异议结论",
+      "patterns": ["无异议", "需人工核验", "建议压缩", "不予"]
+    }
+  ],
+  "penetration_proof_patterns": ["合同执行期", "验收期", "对账开票期", "信用账期"],
+  "penetration_requires_equals": true,
+  "gap_markers": ["缺少", "未提供", "未查询", "待补", "待确认"],
+  "clean_verdict_pattern": "无异议",
+  "gap_flag_patterns": ["需人工核验", "待补", "待确认"],
+  "forbidden_patterns": [
+    "gh[pousr]_[A-Za-z0-9]{16,}",
+    "sk-[A-Za-z0-9]{16,}",
+    "-----BEGIN [A-Z ]*PRIVATE KEY-----",
+    "(?i)password\\s*[:=]\\s*\\S{4,}"
+  ]
+}

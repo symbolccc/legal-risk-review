@@ -1,0 +1,31 @@
+{
+  "case_id": "OA-GOLD-0006",
+  "overall_result": "建议打回",
+  "confidence": "high",
+  "checks": [
+    {
+      "check_id": "attachment_type_license",
+      "result": "fail",
+      "field": "营业执照附件",
+      "form_value": "已上传 法人身份证.jpg",
+      "evidence_value": "附件内容为身份证，非营业执照",
+      "evidence_source": "附件",
+      "reason": "附件类型与用途不符，未识别为营业执照，不进入字段比对",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "business_license_name",
+      "result": "not_applicable",
+      "field": "主体名称",
+      "form_value": "某某有限公司",
+      "evidence_value": "无有效执照",
+      "evidence_source": "未提供",
+      "reason": "缺少有效营业执照，无法比对",
+      "requires_human_review": false
+    }
+  ],
+  "issues": ["营业执照附件内容与用途不符"],
+  "approval_comment": "上传的附件为身份证而非营业执照，请补正后重新提交。",
+  "model_notes": ["先验类型再比字段：类型不符时字段比对无意义"],
+  "_expect": { "valid": true }
+}

@@ -1,0 +1,34 @@
+{
+  "case_id": "OA-GOLD-0004",
+  "overall_result": "建议打回",
+  "confidence": "high",
+  "checks": [
+    {
+      "check_id": "entity_status",
+      "result": "fail",
+      "field": "经营状态",
+      "form_value": "注销",
+      "evidence_value": "注销",
+      "evidence_source": "第三方工商数据",
+      "reason": "主体已注销，不得入库（R10）",
+      "requires_human_review": false
+    },
+    {
+      "check_id": "business_license_validity",
+      "result": "fail",
+      "field": "营业期限",
+      "form_value": "2015-06-01 至 2025-12-31",
+      "evidence_value": "合作期自 2026-11 起",
+      "evidence_source": "OA表单",
+      "reason": "营业期限早于合作开始时间（R11）",
+      "requires_human_review": false
+    }
+  ],
+  "issues": [
+    "经营状态为注销，不得入库（R10）",
+    "营业期限早于合作开始时间（R11）"
+  ],
+  "approval_comment": "主体已注销且营业期限早于合作开始时间，不予入库。",
+  "model_notes": ["已读取：第三方工商数据、表单期限字段"],
+  "_expect": { "valid": true }
+}
