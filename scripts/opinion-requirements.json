@@ -1,35 +1,60 @@
 {
-  "description": "Structure requirements for a payment-term / risk opinion document. Loaded by validate-opinion.ps1 so that script can stay pure ASCII.",
-  "required_sections": [
-    "客户信息",
-    "合作情况",
-    "账期说明",
-    "GMV",
-    "综上"
-  ],
-  "conclusion_must_contain_any": [
-    {
-      "label": "账期天数",
-      "patterns": ["\\d+\\s*个?自然日", "\\d+\\s*天", "\\d+\\s*个工作日"]
+  "description": "Structure requirements per document type. Loaded by validate-opinion.ps1 so that script stays pure ASCII. A document selects its profile with a marker line: <!-- profile: settlement -->",
+  "default_profile": "payment-term",
+  "shared": {
+    "gap_markers": ["缺少", "未提供", "未查询", "待补", "待确认", "无法确认"],
+    "clean_verdict_pattern": "无异议",
+    "gap_flag_patterns": ["需人工核验", "待补", "待确认"],
+    "vague_defect_patterns": ["材料不全", "资料不全", "请补充", "有误", "不对"],
+    "enumerated_defect_pattern": "[；;].+[；;]",
+    "forbidden_patterns": [
+      "gh[pousr]_[A-Za-z0-9]{16,}",
+      "sk-[A-Za-z0-9]{16,}",
+      "-----BEGIN [A-Z ]*PRIVATE KEY-----",
+      "(?i)password\\s*[:=]\\s*\\S{4,}"
+    ]
+  },
+  "profiles": {
+    "payment-term": {
+      "label": "垫款 / 风控意见",
+      "required_sections": ["客户信息", "合作情况", "账期说明", "GMV", "综上"],
+      "conclusion_anchor": "综上",
+      "conclusion_must_contain_any": [
+        { "label": "账期天数", "patterns": ["\\d+\\s*个?自然日", "\\d+\\s*天", "\\d+\\s*个工作日"] },
+        { "label": "垫款判定", "patterns": ["垫款", "敞口"] },
+        { "label": "异议结论", "patterns": ["无异议", "需人工核验", "建议压缩", "不予"] }
+      ],
+      "penetration_terms": ["合同执行期", "验收期", "对账开票期", "信用账期"],
+      "penetration_min_terms": 2,
+      "require_equals": true
     },
-    {
-      "label": "垫款判定",
-      "patterns": ["垫款", "敞口"]
+    "settlement": {
+      "label": "返点 / 结算单审理",
+      "required_sections": ["结算单类型", "核对项", "结论"],
+      "conclusion_anchor": "结论",
+      "conclusion_must_contain_any": [
+        { "label": "审理动作", "patterns": ["通过", "退回", "需人工核验"] },
+        { "label": "问题点名", "patterns": ["不一致", "缺", "错", "不符", "无问题", "一致"] }
+      ],
+      "check_terms": [
+        "审核类型", "回款时间", "合同履行期限", "金额", "税额", "税率",
+        "发票类型", "收款主体", "开票主体"
+      ],
+      "check_min_terms": 5,
+      "require_equals": false,
+      "must_name_each_defect": true
     },
-    {
-      "label": "异议结论",
-      "patterns": ["无异议", "需人工核验", "建议压缩", "不予"]
+    "seal": {
+      "label": "合同用印与归档",
+      "required_sections": ["份数", "用印", "归档"],
+      "conclusion_anchor": "归档",
+      "conclusion_must_contain_any": [
+        { "label": "份数核对", "patterns": ["\\d+\\s*份"] },
+        { "label": "去向记录", "patterns": ["归档", "邮寄", "单号", "留存"] }
+      ],
+      "check_terms": ["逐页", "骑缝", "最终版", "命名", "签收"],
+      "check_min_terms": 2,
+      "require_equals": false
     }
-  ],
-  "penetration_proof_patterns": ["合同执行期", "验收期", "对账开票期", "信用账期"],
-  "penetration_requires_equals": true,
-  "gap_markers": ["缺少", "未提供", "未查询", "待补", "待确认"],
-  "clean_verdict_pattern": "无异议",
-  "gap_flag_patterns": ["需人工核验", "待补", "待确认"],
-  "forbidden_patterns": [
-    "gh[pousr]_[A-Za-z0-9]{16,}",
-    "sk-[A-Za-z0-9]{16,}",
-    "-----BEGIN [A-Z ]*PRIVATE KEY-----",
-    "(?i)password\\s*[:=]\\s*\\S{4,}"
-  ]
+  }
 }

@@ -25,9 +25,11 @@ $validator = Join-Path $PSScriptRoot 'validate-output.ps1'
 if (-not (Test-Path -LiteralPath $validator)) { Write-Output 'VALIDATOR_NOT_FOUND'; exit 1 }
 
 $buckets = @(
+    # Floors are deliberately above the current counts minus slack: they exist to turn a
+    # silently emptied directory into a red build, not to track growth.
     [pscustomobject]@{ Name = 'supplier golden'; Dir = 'evals\supplier'; Min = 6; MustPass = $true  }
-    [pscustomobject]@{ Name = 'legal golden';    Dir = 'evals\legal';    Min = 2; MustPass = $true  }
-    [pscustomobject]@{ Name = 'negative';        Dir = 'evals\invalid';  Min = 5; MustPass = $false }
+    [pscustomobject]@{ Name = 'legal golden';    Dir = 'evals\legal';    Min = 5; MustPass = $true  }
+    [pscustomobject]@{ Name = 'negative';        Dir = 'evals\invalid';  Min = 8; MustPass = $false }
 )
 
 $failures = @()

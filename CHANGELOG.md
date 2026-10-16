@@ -2,6 +2,36 @@
 
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## v1.4.0 — 2026-10-16
+
+消除评测偏斜：此前 `settlement-review.md` 与 `contract-seal.md` 两份细则**零用例覆盖**，
+只有供应商与垫款文书被测。
+
+### Added
+
+- `validate-opinion.ps1` 改为 profile 感知，三类文书共用一个校验器，
+  由文件首行 `<!-- profile: xxx -->` 选择：
+  - `payment-term` 垫款/风控意见（五段 + 结论三要素 + 穿透算式）
+  - `settlement` 返点/结算单审理（九项核对 ≥5 + 缺陷必须逐项点名）
+  - `seal` 用印与归档（份数 + 去向闭环）
+- `opinion-requirements.json` 改为 profiles 结构，新增 `vague_defect_patterns`、
+  `enumerated_defect_pattern`，所有 CJK 词表集中在配置里。
+- 结算单 golden 2 个（通过、退回并逐项点名四个缺陷）、用印 golden 1 个。
+- 负例 2 个：结算单用「材料不全」笼统概括、用印记录缺原件去向。
+- 用例数下限提升：legal 2→5，negative 5→8。
+- `legal-risk-review` 的 description 增加英文摘要，便于跨语言检索命中。
+
+### Fixed
+
+- **`@($null).Count` 等于 1 导致的误判**：profile 缺少某字段时，
+  `@($p.penetration_terms).Count -gt 0` 恒为真，产生一个只含 `$null` 的列表，
+  而 `$null` 参与 `-like` 匹配会命中任意文本，于是所有非垫款类文书都被判为
+  「只有 1 项、不足 5 项」。改为显式检查属性是否存在。
+- **脚本内中文字面量再次违反纯 ASCII 约束**：`材料不全` 在 PowerShell 5.1 下被读成乱码，
+  规则永不触发。移入配置文件。
+- **笼统措辞检测扫描全文**：核对项段落里的合法分号会让校验器误认为「已逐项列举」，
+  而真正的笼统结论在另一段。改为只在结论段判定。
+
 ## v1.3.0 — 2026-10-16
 
 拆分为两个技能。此前把 OA 自动化项目的输出契约与工程约束，当成了通用法务审核口径。

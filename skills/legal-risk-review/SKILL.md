@@ -1,7 +1,7 @@
 ---
 name: legal-risk-review
-description: 广告营销公司法务风控审核口径，输出中文文书。用于撰写客户垫款意见与风控意见、审理返点及客户/媒体结算单、合同用印与原件归档。当用户要求出风控意见、垫款意见、审结算单、写审批话术、推算账期与垫款敞口，或需要整理用印归档流程时使用。供应商入库审批请用 oa-supplier-review 技能，不要套用本技能的结论口径。
-version: 1.3.0
+description: 广告营销公司法务风控审核口径，输出中文文书。用于撰写客户垫款意见与风控意见、审理返点及客户/媒体结算单、合同用印与原件归档。当用户要求出风控意见、垫款意见、审结算单、写审批话术、推算账期与垫款敞口，或需要整理用印归档流程时使用。供应商入库审批请用 oa-supplier-review 技能，不要套用本技能的结论口径。English: Chinese-language legal and risk review practice for an advertising agency - payment-term opinions, rebate and settlement review, contract sealing and archiving. Not for supplier onboarding; use oa-supplier-review for that.
+version: 1.4.0
 license: MIT
 author: symbolccc
 ---
@@ -37,7 +37,15 @@ author: symbolccc
 2. 按 `references/source-contract.md` 的来源优先级收集证据；**先确认附件类型与用途匹配，再谈字段比对**；记录实际读到了哪些、哪些没读到。
 3. 按 §4 分档，按 §5 判断是否升级。
 4. 用 `assets/` 对应模板输出，不自创结构。
-5. 交付前跑 `scripts/validate-opinion.ps1`——它检查必需段落、结论三要素、穿透算式是否写出，以及「有证据缺口却声称无异议」这类矛盾。
+5. 交付前跑 `scripts/validate-opinion.ps1`。三类文书共用一个校验器，用文件首行标记选择 profile：
+
+   | 文书类型 | 标记 | 主要拦什么 |
+   | :-- | :-- | :-- |
+   | 垫款/风控意见 | `<!-- profile: payment-term -->` | 五段缺失、结论三要素、穿透算式未写出 |
+   | 返点/结算单审理 | `<!-- profile: settlement -->` | 九项核对不足五项、缺陷用笼统话术概括 |
+   | 用印与归档记录 | `<!-- profile: seal -->` | 份数与去向未闭环、流程要件缺失 |
+
+   三者共同检查：有证据缺口却声称无异议、文档内出现凭据。
 6. 过 §7 自检清单后才交付。
 
 ## 2. 垫款 / 风控意见
